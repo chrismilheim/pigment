@@ -358,6 +358,8 @@ body.studio-max{overflow:hidden}
 @media(max-width:767px){.st-view{height:58vh;height:58dvh;min-height:300px;margin:-14px -12px 0;border-radius:0;border-left:0;border-right:0;border-top:0}
  .st-tools{flex-direction:row;top:auto;bottom:10px;left:8px;gap:5px}.st-tr{top:8px;bottom:auto;left:auto;right:8px}.st-b{width:40px;height:40px}
  .st-active{top:8px;left:8px}.st-status{bottom:58px;left:10px}.studio.max .st-view{margin:0}}
+.st-layer{border:1px solid var(--line2);border-radius:10px;padding:8px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
+.st-lpaint{display:flex;gap:8px;align-items:center;width:100%;background:none;border:1px solid var(--line2);border-radius:8px;padding:5px 8px;color:var(--text);cursor:pointer;font:inherit;margin-top:6px}.st-lpaint:hover{border-color:var(--gold)}
 footer{max-width:1380px;margin:0 auto;padding:10px 20px 40px;color:var(--dim);font-size:12px}
 </style>
 </head>
@@ -650,7 +652,7 @@ const ACT={},INP={},CHG={};
 
 /* ---------- state ---------- */
 const KEY='pigmentarium.v1';
-const DEF={studio:{model:'ranger',slots:{},active:0,tool:'brush',panel:'paint',brush:0.05,fillAngle:35,mirror:false,front:true,wash:0.55,edge:0.45,ao:true,shadows:true,turn:false,bg:'dark',max:false,light:{preset:'studio',key:1.9,az:35,el:42,env:0.38,osl:{on:false,hex:'#4FB6FF',inten:1.5,range:1.2,pos:[0.4,1.6,0.6],placed:false}}},light:{surfaces:['cit:macragge-blue.base','cit:mephiston-red.base','cit:wraithbone.base','cit:cadian-fleshtone.layer','cit:abaddon-black.base'],hex:'#4FB6FF',inten:1.4,amb:0.35,view:'tri'},owned:[],saved:[],custom:[],compare:[],projects:[],inv:{},wish:[],calib:{},lastBackup:0,layers:{base:'hex:#86898C',stack:[{id:'pig:pr254',meth:'coat',water:1,coats:2},{id:'pig:pr179',meth:'wash',water:1,coats:1},{id:'pig:po73',meth:'edge',water:0.5,coats:1}],target:''},mix:[{id:'pig:pb29',parts:1},{id:'pig:py3',parts:1}],settings:{strength:true,value:false,cb:'none'},ui:{tab:'mixer',wet:false,metal:'silver',proj:'',cvFrom:'owned',cvTo:'val',ladA:0,ladB:1,hl:'',sh:'',libBrand:'all',libOwned:false,pigFam:'all',matchSrc:'owned',matchMax:3,matchPig:false,matchTrans:false,matchDisc:false,libExp:[],libSet:'all',libType:'all',libDisc:false,pigOwn:'all',target:'#3A6B4C',harm:'comp',schemeBase:'#0D407F',gL:[0,100],gSrc:'owned'}};
+const DEF={studio:{model:'ranger',slots:{},active:0,tool:'brush',panel:'paint',brush:0.05,fillAngle:35,mirror:false,front:true,wash:0.15,edge:0.12,settle:1,ao:true,shadows:true,turn:false,bg:'dark',max:false,light:{preset:'studio',key:1.9,az:35,el:42,env:0.38,osl:{on:false,hex:'#4FB6FF',inten:1.5,range:1.2,pos:[0.4,1.6,0.6],placed:false}}},light:{surfaces:['cit:macragge-blue.base','cit:mephiston-red.base','cit:wraithbone.base','cit:cadian-fleshtone.layer','cit:abaddon-black.base'],hex:'#4FB6FF',inten:1.4,amb:0.35,view:'tri'},owned:[],saved:[],custom:[],compare:[],projects:[],inv:{},wish:[],calib:{},lastBackup:0,layers:{base:'hex:#86898C',stack:[{id:'pig:pr254',meth:'coat',water:1,coats:2},{id:'pig:pr179',meth:'wash',water:1,coats:1},{id:'pig:po73',meth:'edge',water:0.5,coats:1}],target:''},mix:[{id:'pig:pb29',parts:1},{id:'pig:py3',parts:1}],settings:{strength:true,value:false,cb:'none'},ui:{tab:'mixer',wet:false,metal:'silver',proj:'',cvFrom:'owned',cvTo:'val',ladA:0,ladB:1,hl:'',sh:'',libBrand:'all',libOwned:false,pigFam:'all',matchSrc:'owned',matchMax:3,matchPig:false,matchTrans:false,matchDisc:false,libExp:[],libSet:'all',libType:'all',libDisc:false,pigOwn:'all',target:'#3A6B4C',harm:'comp',schemeBase:'#0D407F',gL:[0,100],gSrc:'owned'}};
 let state;
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');state=s?{...structuredClone(DEF),...s,settings:{...DEF.settings,...(s.settings||{})},ui:{...DEF.ui,...(s.ui||{})}}:structuredClone(DEF)}catch(e){state=structuredClone(DEF)}}
 let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast('Could not save to browser storage')}},120)}
@@ -1478,7 +1480,7 @@ const ZONES=['Recess','Flat','Raised edge'];
 function layerKM(Rg,ks,t){const R=new Array(NW);for(let i=0;i<NW;i++){const g=Rg[i];if(t<1e-5){R[i]=g;continue}const k=ks[i],a=1+k,b=Math.sqrt(k*k+2*k),x=b*t;const ct=x>20?1:1/Math.tanh(x);R[i]=Math.min(0.9995,Math.max(0.0005,(1-g*(a-b*ct))/(a-g+b*ct)))}return R}
 function colorFromSpec(R,lin,extra){lin=lin.map(clamp01);const lab=linToLab(lin);return Object.assign({hex:linToHex(lin),lin,lab,lch:labToLch(lab),str:1,op:0.7,_sp:{R,ks:R.map(ksOf),fitLin:specLin(R)}},extra||{})}
 function resid(c){const sp=ensureSpec(c);return [c.lin[0]-sp.fitLin[0],c.lin[1]-sp.fitLin[1],c.lin[2]-sp.fitLin[2]]}
-function applyLayer(base,p,t){const bs=ensureSpec(base),ps=ensureSpec(p);const R=layerKM(bs.R,ps.ks,t);
+function applyLayer(base,p,t){p=filmSrc(p);const bs=ensureSpec(base),ps=ensureSpec(p);const R=layerKM(bs.R,ps.ks,t);
  let num=0,den=0;for(let i=0;i<NW;i++){const d=ps.R[i]-bs.R[i];num+=(R[i]-bs.R[i])*d;den+=d*d}const h=den>1e-6?clamp01(num/den):1;
  const rb=resid(base),rp=resid(p);const lin=specLin(R);for(let c=0;c<3;c++)lin[c]+=(1-h)*rb[c]+h*rp[c];return colorFromSpec(R,lin,{cov:h})}
 function layerThickness(L,p,zone){const m=METH[L.meth]||METH.coat;const frac=1/(1+Math.max(0,+L.water||0));let t=(HIDE[p.opk]||1.4)*m.k*m.z[zone]*frac*(+L.coats||1);if(useStr())t*=Math.sqrt(p.str||1);return t}
@@ -1487,7 +1489,7 @@ function simulateStack(baseP,stack){const zones=[baseP,baseP,baseP];const steps=
  stack.forEach(L=>{const p=getPaint(L.id);if(!p||p.metal){steps.push(null);return}const before=zones[1];for(let z=0;z<3;z++){const t=layerThickness(L,p,z);zones[z]=t>0?applyLayer(zones[z],p,t):zones[z]}steps.push({zones:zones.slice(),before,cov:zones[1]===before?0:(zones[1].cov||0)})});
  return {zones,steps}}
 function coatsToCover(before,L,p){if(!METH[L.meth]||METH[L.meth].z[1]<0.5)return null;const one={...L,coats:1};const t=layerThickness(one,p,1);if(t<=0)return null;
- for(let n=1;n<=12;n++){const c=applyLayer(before,p,t*n);if(dE00(c.lab,p.lab)<2)return n}return '12+'}
+ if(p.trans)return null;for(let n=1;n<=12;n++){const c=applyLayer(before,p,t*n);if(dE00(c.lab,p.lab)<2)return n}return '12+'}
 
 /* ====================================================================== LAYERS TAB */
 const PRIMERS=[['White primer','#EEEEEA'],['Grey primer','#86898C'],['Black primer','#1C1C1E'],['Bone/Wraithbone','#DBD1B2'],['Red-brown','#5A2F25']];
@@ -1929,7 +1931,8 @@ const MODELS3D={
  upload:{l:'Your model (STL / OBJ)',d:'Upload a 3D-printing file and paint it',slots:()=>[['Main','hex:#8C8F94']]}};
 const FIN={matte:[0,0.86],satin:[0,0.55],gloss:[0,0.2],metal:[1,0.36]};
 const FIN_L={matte:'Matte',satin:'Satin',gloss:'Gloss',metal:'Metallic'};
-function stSlots(key){const S=stS();key=key||S.model;if(!S.slots[key])S.slots[key]=MODELS3D[key].slots().map(([name,pid,fin,glow])=>({name,pid,shade:'auto',hl:'auto',fin:fin||(getPaint(pid)&&getPaint(pid).metal?'metal':'matte'),glow:!!glow}));return S.slots[key]}
+function stSlots(key){const S=stS();key=key||S.model;if(!S.slots[key])S.slots[key]=MODELS3D[key].slots().map(([name,pid,fin,glow],i)=>({name,pid,shade:'auto',hl:'auto',fin:fin||(getPaint(pid)&&getPaint(pid).metal?'metal':'matte'),glow:!!glow,layers:defaultLayers(key,i)}));
+ S.slots[key].forEach((sl,i)=>{if(!Array.isArray(sl.layers))sl.layers=defaultLayers(key,i)});return S.slots[key]}
 /* ---------- engine loading ---------- */
 function loadThree(){if(ST.T)return Promise.resolve();if(ST.loading)return ST.loading;
  ST.loading=(async()=>{const T=await import('three');const m=await Promise.all(['controls/OrbitControls.js','geometries/RoundedBoxGeometry.js','loaders/STLLoader.js','loaders/OBJLoader.js','postprocessing/EffectComposer.js','postprocessing/RenderPass.js','postprocessing/GTAOPass.js','postprocessing/OutputPass.js','environments/RoomEnvironment.js'].map(f=>import('three/addons/'+f)));const bvh=await import('three-mesh-bvh');
@@ -1966,7 +1969,7 @@ function along(P,geo,slot,A,B,o){const T=ST.T;const a=new T.Vector3(...A),b=new 
 function limb(P,A,B,r,slot){const T=ST.T;const len=Math.hypot(B[0]-A[0],B[1]-A[1],B[2]-A[2]);along(P,new T.CapsuleGeometry(r,Math.max(0.001,len),8,24),slot,A,B)}
 function soupOf(P){let n=0;P.forEach(x=>n+=x.a.length);const pos=new Float32Array(n),sl=new Uint8Array(n/3);let o=0;P.forEach(x=>{pos.set(x.a,o);sl.fill(x.slot,o/3,(o+x.a.length)/3);o+=x.a.length});return {pos,sl}}
 function geoRanger(){const T=ST.T,RB=ST.A.RoundedBox,P=[];const S={armour:0,trim:1,cloth:2,suit:3,leather:4,metal:5,lens:6,base:7,rim:8,gun:9};
- prim(P,new T.CylinderGeometry(0.6,0.62,0.09,96,2),S.base,{p:[0,0.045,0]});prim(P,new T.TorusGeometry(0.615,0.02,12,128),S.rim,{p:[0,0.045,0],r:[Math.PI/2,0,0]});
+ prim(P,new T.CylinderGeometry(0.6,0.62,0.09,96,2,true),S.base,{p:[0,0.045,0]});prim(P,new T.RingGeometry(0,0.6,96,16),S.base,{p:[0,0.09,0],r:[-Math.PI/2,0,0]});prim(P,new T.TorusGeometry(0.615,0.02,12,128),S.rim,{p:[0,0.045,0],r:[Math.PI/2,0,0]});
  [[0.34,0.22,1.2],[-0.36,-0.18,0.9],[0.1,-0.38,0.8],[-0.2,0.36,0.7]].forEach(([x,z,k])=>prim(P,new T.DodecahedronGeometry(0.06*k,1),S.base,{p:[x,0.09,z],s:[1.3,0.6,1],r:[0,x*3,0]}));
  for(const sx of [-1,1]){const x=0.12*sx;
   prim(P,new RB(0.15,0.11,0.27,4,0.035),S.leather,{p:[x,0.145,0.03]});limb(P,[x,0.24,0],[x,0.6,0],0.07,S.armour);
@@ -1992,7 +1995,7 @@ function geoRanger(){const T=ST.T,RB=ST.A.RoundedBox,P=[];const S={armour:0,trim
  const prof=[];for(let i=0;i<=16;i++){const t=i/16;prof.push(new T.Vector2(0.2+0.24*t*t+0.02*Math.sin(t*9),1.48-1.1*t))}
  prim(P,new T.LatheGeometry(prof,40,Math.PI*0.58,Math.PI*0.84),S.cloth,{p:[0,0,-0.035]});
  return soupOf(P)}
-function geoShapes(){const T=ST.T,RB=ST.A.RoundedBox,P=[];prim(P,new T.CylinderGeometry(0.9,0.92,0.08,128,2),4,{p:[0,0.04,0]});prim(P,new T.TorusGeometry(0.915,0.02,12,160),5,{p:[0,0.04,0],r:[Math.PI/2,0,0]});
+function geoShapes(){const T=ST.T,RB=ST.A.RoundedBox,P=[];prim(P,new T.CylinderGeometry(0.9,0.92,0.08,128,2,true),4,{p:[0,0.04,0]});prim(P,new T.RingGeometry(0,0.9,128,20),4,{p:[0,0.08,0],r:[-Math.PI/2,0,0]});prim(P,new T.TorusGeometry(0.915,0.02,12,160),5,{p:[0,0.04,0],r:[Math.PI/2,0,0]});
  prim(P,new T.SphereGeometry(0.27,72,48),0,{p:[-0.5,0.35,0.12]});prim(P,new RB(0.42,0.42,0.42,6,0.06),1,{p:[0.5,0.29,0.12],r:[0,0.45,0]});
  prim(P,new T.CylinderGeometry(0.19,0.19,0.5,72,10),2,{p:[0,0.33,-0.45]});prim(P,new T.TorusKnotGeometry(0.22,0.075,320,40),3,{p:[0,0.58,0.32],s:[0.95,0.95,0.95]});return soupOf(P)}
 function geoPad(){const T=ST.T,P=[];const y0=0.62;prim(P,new T.SphereGeometry(0.6,120,72,0,Math.PI*2,0,Math.PI/2),0,{p:[0,y0,0],r:[Math.PI/2,0,0],s:[1,0.55,0.8]});
@@ -2011,6 +2014,8 @@ function buildData(soup,slNI,double){const T=ST.T;const w=weld(soup);const nv=w.
  for(let t=0;t<idx.length;t+=3){const A=idx[t],B=idx[t+1],C=idx[t+2];adj[fill[A]++]=B;adj[fill[A]++]=C;adj[fill[B]++]=A;adj[fill[B]++]=C;adj[fill[C]++]=A;adj[fill[C]++]=B}
  let cv=new Float32Array(nv);for(let i=0;i<nv;i++){let s=0,c=0;const px=pos[3*i],py=pos[3*i+1],pz=pos[3*i+2],nx=nrm[3*i],ny=nrm[3*i+1],nz=nrm[3*i+2];for(let k=st[i];k<st[i+1];k++){const j=adj[k];const dx=pos[3*j]-px,dy=pos[3*j+1]-py,dz=pos[3*j+2]-pz;const l=Math.hypot(dx,dy,dz);if(l>1e-12){s-=(nx*dx+ny*dy+nz*dz)/l;c++}}cv[i]=c?s/c:0}
  for(let it=0;it<2;it++){const o=new Float32Array(nv);for(let i=0;i<nv;i++){let s=0;const c=st[i+1]-st[i];for(let k=st[i];k<st[i+1];k++)s+=cv[adj[k]];o[i]=c?0.5*cv[i]+0.5*s/c:cv[i]}cv=o}
+ let cb=cv.slice();for(let it=0;it<10;it++){const o=new Float32Array(nv);for(let i=0;i<nv;i++){let s=0;const c=st[i+1]-st[i];for(let k=st[i];k<st[i+1];k++)s+=cb[adj[k]];o[i]=c?0.4*cb[i]+0.6*s/c:cb[i]}cb=o}
+ {const ng=[];const sp=Math.max(1,Math.floor(nv/20000));for(let i=0;i<nv;i+=sp)if(cb[i]<0)ng.push(-cb[i]);ng.sort((x,y)=>x-y);const pn=Math.max(ng[Math.floor(ng.length*0.95)]||0,0.004);for(let i=0;i<nv;i++)cb[i]=Math.min(1.5,Math.max(0,-cb[i])/pn)}
  const step=Math.max(1,Math.floor(nv/20000));const pos2=[],neg=[];for(let i=0;i<nv;i+=step)(cv[i]>=0?pos2:neg).push(Math.abs(cv[i]));pos2.sort((x,y)=>x-y);neg.sort((x,y)=>x-y);const pp=Math.max(pos2[Math.floor(pos2.length*0.96)]||0.05,0.02),pn=Math.max(neg[Math.floor(neg.length*0.96)]||0,pp*0.45,0.02);for(let i=0;i<nv;i++)cv[i]=Math.max(-1,Math.min(1,cv[i]/(cv[i]>=0?pp:pn)));
  g.computeBoundingBox();const bb=g.boundingBox;const size=Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z);
  const cell=size/48,gd=[0,1,2].map(k=>Math.max(1,Math.ceil((bb.max.getComponent(k)-bb.min.getComponent(k))/cell)+1));const cellOf=new Uint32Array(nv),cnt=new Uint32Array(gd[0]*gd[1]*gd[2]+1);
@@ -2019,7 +2024,7 @@ function buildData(soup,slNI,double){const T=ST.T;const w=weld(soup);const nv=w.
  const slot=new Uint8Array(nv);if(slNI)for(let i=0;i<nv;i++)slot[i]=slNI[w.first[i]];
  g.setAttribute('color',new T.BufferAttribute(new Float32Array(nv*3),3));g.setAttribute('aMat',new T.BufferAttribute(new Float32Array(nv*3),3));
  g.boundsTree=new ST.A.bvh.MeshBVH(g);
- return {g,nv,pos,nrm,idx,st,adj,cv,slot,def:slot.slice(),bb,size,cell,gd,gs:cnt,gl,tris:idx.length/3,double}}
+ return {g,nv,pos,nrm,idx,st,adj,cv,cB:cb,slot,def:slot.slice(),bb,size,cell,gd,gs:cnt,gl,tris:idx.length/3,double}}
 function gridQuery(D,p,r,cb){const b=D.bb.min,lo=[0,1,2].map(k=>Math.max(0,Math.floor((p[k]-r-b.getComponent(k))/D.cell))),hi=[0,1,2].map(k=>Math.min(D.gd[k]-1,Math.floor((p[k]+r-b.getComponent(k))/D.cell)));const r2=r*r,P=D.pos;
  for(let x=lo[0];x<=hi[0];x++)for(let y=lo[1];y<=hi[1];y++)for(let z=lo[2];z<=hi[2];z++){const c=(x*D.gd[1]+y)*D.gd[2]+z;for(let k=D.gs[c];k<D.gs[c+1];k++){const i=D.gl[k];const dx=P[3*i]-p[0],dy=P[3*i+1]-p[1],dz=P[3*i+2]-p[2];if(dx*dx+dy*dy+dz*dz<=r2)cb(i)}}}
 /* ---------- colour tables per slot ---------- */
@@ -2027,10 +2032,14 @@ const AUTO_SH={warm:['pig:pv29',0.34],cool:['pig:pb60',0.34],neutral:['pig:pbk7'
 function slotColors(sl){const base=getPaint(sl.pid)||getPaint('hex:#8C8F94');const kind=sl.fin==='metal'?'metal':base.lch[1]<10?'neutral':(base.lch[2]<110||base.lch[2]>=330)?'warm':'cool';
  const mix=(pid,t)=>{const q=getPaint(pid);return q?colorFromMix(mixKM([base,q],[1-t,t],false)):base};
  const shade=sl.shade&&sl.shade!=='auto'?(getPaint(sl.shade)||mix(...AUTO_SH[kind])):mix(...AUTO_SH[kind]);const hl=sl.hl&&sl.hl!=='auto'?(getPaint(sl.hl)||mix(...AUTO_HL[kind])):mix(...AUTO_HL[kind]);return {base,shade,hl}}
-function buildTables(){const sl=stSlots(ST.key);ST.tables=sl.map(s=>{const c=slotColors(s);const f=FIN[s.fin]||FIN.matte;return {b:c.base.lin,s:c.shade.lin,h:c.hl.lin,m:[f[0],f[1],s.glow?1:0],c}})}
+function buildTables(){const sl=stSlots(ST.key);ST.tables=sl.map(s=>{const c=slotColors(s);const f=FIN[s.fin]||FIN.matte;return {b:c.base.lin,s:c.shade.lin,h:c.hl.lin,m:[f[0],f[1],s.glow?1:0],c,L:layerTables(s)}})}
 const sstep=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)};
 function recolor(list){const D=ST.D;if(!D)return;if(!ST.tables)buildTables();const S=stS(),col=D.g.attributes.color,mat=D.g.attributes.aMat,C=col.array,M=mat.array,TB=ST.tables,wa=S.wash,ed=S.edge;
- const one=i=>{const t=TB[D.slot[i]]||TB[0];const c=D.cv[i];const r=wa*sstep(0.06,0.85,-c),e=ed*sstep(0.14,0.9,c);for(let k=0;k<3;k++){const v=t.b[k]*(1-r)+t.s[k]*r;C[3*i+k]=v*(1-e)+t.h[k]*e}M[3*i]=t.m[0];M[3*i+1]=t.m[1];M[3*i+2]=t.m[2]};
+ const se=S.settle==null?1:S.settle,F={occ:0,cB:0,cL:0,vx:0,ny:0,nt:0.5,ns:0.5},cr=[0,0,0];
+ const one=i=>{const t=TB[D.slot[i]]||TB[0];const c=D.cv[i];const r=wa*sstep(0.06,0.85,-c),e=ed*sstep(0.14,0.9,c);for(let k=0;k<3;k++){const v=t.b[k]*(1-r)+t.s[k]*r;cr[k]=v*(1-e)+t.h[k]*e}let mt=t.m[0],ro=t.m[1];
+  if(t.L.length){F.occ=D.occ?D.occ[i]:0;F.cB=D.cB?D.cB[i]:0;F.cL=c<0?-c:0;F.vx=c>0?c:0;F.ny=D.nrm[3*i+1];F.nt=D.nt?D.nt[i]:0.5;F.ns=D.ns?D.ns[i]:0.5;
+   for(const L of t.L){if(L.c<=0)continue;const w=layerW(L,F,se);if(w<=1e-4)continue;const sx=L.c*w;cr[0]=filmCh(cr[0],L.a[0],L.b[0],sx);cr[1]=filmCh(cr[1],L.a[1],L.b[1],sx);cr[2]=filmCh(cr[2],L.a[2],L.b[2],sx);if(L.metal){const cov=1-Math.exp(-sx*1.6);mt+=(1-mt)*cov;ro+=(0.36-ro)*cov}}}
+  C[3*i]=cr[0];C[3*i+1]=cr[1];C[3*i+2]=cr[2];M[3*i]=mt;M[3*i+1]=ro;M[3*i+2]=t.m[2]};
  col.clearUpdateRanges&&col.clearUpdateRanges();mat.clearUpdateRanges&&mat.clearUpdateRanges();
  if(list){let lo=1e9,hi=-1;for(const i of list){one(i);if(i<lo)lo=i;if(i>hi)hi=i}if(hi>=0&&col.addUpdateRange){col.addUpdateRange(lo*3,(hi-lo+1)*3);mat.addUpdateRange(lo*3,(hi-lo+1)*3)}}else for(let i=0;i<D.nv;i++)one(i);
  col.needsUpdate=true;mat.needsUpdate=true;ST.dirty=true}
@@ -2064,12 +2073,12 @@ async function loadModel(key){const S=stS();ST.busy=true;stStatus('Building mode
   if(key==='upload'){const rec=await IDB.get('upload');if(!rec){key=S.model='ranger';save();return loadModel('ranger')}soup=soupFromUpload(rec);double=true;ST.uploadName=rec.name}
   else{const r=key==='shapes'?geoShapes():key==='pad'?geoPad():geoRanger();soup=r.pos;sl=r.sl;double=true}
   if(soup.length/9>1500000)toast('Large model ('+Math.round(soup.length/9/1000)+'k triangles) — painting may be slow');
-  const D=buildData(soup,sl,double);
+  const D=buildData(soup,sl,double);settleFields(D);
   const saved=await IDB.get('paint:'+key);if(saved&&saved.slot&&saved.slot.length===D.nv)D.slot.set(saved.slot);
   const slots=stSlots(key);for(let i=0;i<D.nv;i++)if(D.slot[i]>=slots.length)D.slot[i]=0;
   if(ST.mesh){ST.scene.remove(ST.mesh);ST.mesh.geometry.dispose();ST.mesh.material.dispose()}
   ST.D=D;ST.key=key;ST.undo=[];ST.redo=[];ST.mat=makeMat(double);ST.mesh=new ST.T.Mesh(D.g,ST.mat);ST.mesh.raycast=ST.A.bvh.acceleratedRaycast;ST.scene.add(ST.mesh);
-  ST.tables=null;recolor();fitCamera();applyLights();if(!S.light.osl.placed){const b=D.bb;S.light.osl.pos=[b.max.x*0.6,b.min.y+D.size*0.8,b.max.z+D.size*0.18]}applyLights();stPanel();stStatus()}
+  ST.tables=null;recolor();fitCamera();applyLights();if(!S.light.osl.placed){const b=D.bb;S.light.osl.pos=[b.max.x*0.6,b.min.y+D.size*0.8,b.max.z+D.size*0.18]}applyLights();stPanel();stStatus();bakeOcc(D,key+':v1').then(()=>{const e=$('#stOccSt');if(e)e.textContent='Recess analysis ready'})}
  catch(e){console.error(e);stStatus('Could not load model: '+(e.message||e));toast('Could not load that model')}finally{ST.busy=false}}
 function stStatus(msg,spin){const el=$('#stStatus');if(!el)return;const D=ST.D,S=stS();const tip={rotate:'Drag to orbit · scroll / pinch to zoom · right-drag / two fingers to pan',brush:'Drag on the model to paint · drag the background to orbit',fill:'Tap a region to fill it up to sharp edges',pick:'Tap the model to pick up its colour',light:'Tap the model to place the OSL light'}[S.tool]||'';
  el.innerHTML=msg?`${spin?'<span class="spin"></span> ':''}${esc(msg)}`:D?`${esc(ST.key==='upload'?(ST.uploadName||'Your model'):MODELS3D[ST.key].l)} · ${D.tris.toLocaleString()} triangles<br><span style="color:var(--dim)">${tip}</span>`:''}
@@ -2097,7 +2106,7 @@ let mvQ=null;function stMove(e){if(ST.painting!==false&&ST.painting===e.pointerI
 function stUp(e){if(ST.painting!==false&&ST.painting===e.pointerId){ST.painting=false;saveSlots()}}
 function saveSlots(){clearTimeout(ST.saveT);const key=ST.key,D=ST.D;ST.saveT=setTimeout(()=>{if(D&&key)IDB.set('paint:'+key,{slot:D.slot,nv:D.nv})},400)}
 /* ---------- UI ---------- */
-RENDER.studio=()=>{const S=stS();if(!S._init){S._init=1;S.ao=!stPhone();save()}
+RENDER.studio=()=>{const S=stS();if(!S._init){S._init=1;S.ao=!stPhone();save()}if(S._lv!==2){S._lv=2;S.wash=Math.min(S.wash,0.15);S.edge=Math.min(S.edge,0.12);if(S.settle==null)S.settle=1;save()}
  $('#v-studio').innerHTML=`<div class="studio ${S.max?'max':''}" id="stRoot">
   <div class="st-view" id="stView"><div class="st-host vm" id="stHost"></div>
    <div class="st-tools" role="toolbar" aria-label="Paint tools">${[['rotate','Rotate / view'],['brush','Brush'],['fill','Smart fill'],['pick','Pick colour'],['light','Place OSL light']].map(([k,l])=>`<button class="st-b ${S.tool===k?'on':''}" data-act="stTool" data-arg="${k}" title="${l}" aria-label="${l}">${ic(k==='light'?'bulb':k,19)}</button>`).join('')}</div>
@@ -2119,7 +2128,7 @@ function stPanel(){const el=$('#stPanel');if(!el)return;const S=stS();const sl=s
     <div class="st-row"><span class="lbl">Shade</span>${sw(c.shade.hex,'s20')}<span class="hint" style="flex:1">${s.shade==='auto'?'Auto (K-M mix)':esc(c.shade.name)}</span><button class="btn sm" data-act="stPaint" data-arg="shade">Choose</button>${s.shade!=='auto'?'<button class="btn sm ghost" data-act="stAuto" data-arg="shade">Auto</button>':''}</div>
     <div class="st-row"><span class="lbl">Highlight</span>${sw(c.hl.hex,'s20')}<span class="hint" style="flex:1">${s.hl==='auto'?'Auto (K-M mix)':esc(c.hl.name)}</span><button class="btn sm" data-act="stPaint" data-arg="hl">Choose</button>${s.hl!=='auto'?'<button class="btn sm ghost" data-act="stAuto" data-arg="hl">Auto</button>':''}</div>
     <div class="seg" style="display:flex;margin-top:8px">${Object.entries(FIN_L).map(([k,l])=>`<button style="flex:1" class="${s.fin===k?'on':''}" data-act="stFin" data-arg="${k}">${l}</button>`).join('')}</div>
-    <div class="row" style="margin-top:8px"><label class="chk"><input type="checkbox" data-chg="stGlow" ${s.glow?'checked':''}>Glows (lenses, plasma, runes)</label>${S.model==='upload'&&sl.length>1?`<button class="btn sm ghost danger" data-act="stDelSlot" style="margin-left:auto">Remove</button>`:''}</div></div>`:''}</div>`}).join('')}</div>
+    <div class="row" style="margin-top:8px"><label class="chk"><input type="checkbox" data-chg="stGlow" ${s.glow?'checked':''}>Glows (lenses, plasma, runes)</label>${S.model==='upload'&&sl.length>1?`<button class="btn sm ghost danger" data-act="stDelSlot" style="margin-left:auto">Remove</button>`:''}</div>${layersHtml(s)}</div>`:''}</div>`}).join('')}</div>
   <div class="row" style="margin-top:8px">${sl.length<16?'<button class="btn sm" data-act="stAddSlot">+ Colour</button>':''}<button class="btn sm" data-act="stFillAll">Fill whole model</button><button class="btn sm ghost" data-act="stMixer">Use Mixer result</button></div>
   ${state.saved.length?`<div class="lbl" style="margin-top:12px">Your saved colours → brush colour</div><div class="row" style="gap:5px;margin-top:6px">${state.saved.slice(0,16).map(s=>`<button class="sw s28" style="background:${s.hex};border:0;cursor:pointer" title="${esc(s.name)}" data-act="stSaved" data-arg="${s.id}"></button>`).join('')}</div>`:''}
   ${proj.length?`<div class="row" style="margin-top:10px"><select data-chg="stProj" style="flex:1"><option value="">Load colours from a project…</option>${proj.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>`:''}
@@ -2127,10 +2136,13 @@ function stPanel(){const el=$('#stPanel');if(!el)return;const S=stS();const sl=s
   <div class="st-sl"><span class="lbl">Size</span><input type="range" min="0.008" max="0.25" step="0.002" value="${S.brush}" data-inp="stBrush"></div>
   <div class="st-sl"><span class="lbl">Fill stops at edges sharper than <b class="mono" id="stFAv" style="color:var(--gold2)">${S.fillAngle}°</b></span><input type="range" min="5" max="90" step="1" value="${S.fillAngle}" data-inp="stFA"></div>
   <div class="row"><label class="chk"><input type="checkbox" data-chg="stMirror" ${S.mirror?'checked':''}>Mirror left/right</label><label class="chk"><input type="checkbox" data-chg="stFront" ${S.front?'checked':''}>Don't paint through to the back</label></div>
-  <div class="sect-t">Shading (all colours)</div>
+  <div class="sect-t">Settling</div>
+  <div class="st-sl"><span class="lbl">Just applied (wet) → settled &amp; dry <b class="mono" id="stSv" style="color:var(--gold2)">${Math.round((S.settle==null?1:S.settle)*100)}%</b></span><input type="range" id="stSettleR" min="0" max="1" step="0.01" value="${S.settle==null?1:S.settle}" data-inp="stSettle"></div>
+  <div class="row"><button class="btn sm gold" data-act="stPlay">▶ Watch it settle</button><span class="hint" id="stOccSt" style="font-size:11.5px">${ST.D&&ST.D.occDone?'Recess analysis ready':'Analysing recesses…'}</span></div>
+  <div class="sect-t">Quick shading (approximate, all colours)</div>
   <div class="st-sl"><span class="lbl">Recess shade / wash <b class="mono" id="stWv" style="color:var(--gold2)">${Math.round(S.wash*100)}%</b></span><input type="range" min="0" max="1" step="0.02" value="${S.wash}" data-inp="stWash"></div>
   <div class="st-sl"><span class="lbl">Edge highlights <b class="mono" id="stEv" style="color:var(--gold2)">${Math.round(S.edge*100)}%</b></span><input type="range" min="0" max="1" step="0.02" value="${S.edge}" data-inp="stEdge"></div>
-  <p class="hint" style="font-size:11.5px">Shade and highlight colours are real Kubelka–Munk paint mixes of each base colour (warm colours shade toward purple-brown, cool toward deep blue). Pick your own per colour above.</p>`}
+  <p class="hint" style="font-size:11.5px">Shade and highlight colours are real Kubelka–Munk paint mixes of each base colour (warm colours shade toward purple-brown, cool toward deep blue). Pick your own per colour above. For real washes, glazes and highlights, add <b>paint layers</b> to each colour and keep these low.</p>`}
 function stPanelLight(el){const S=stS(),L=S.light,o=L.osl;
  el.innerHTML=`<div class="lbl">Light setup</div><div class="st-grid">${Object.entries(LIGHT3D).map(([k,v])=>`<button class="btn sm ${L.preset===k?'gold':''}" data-act="stPreset" data-arg="${k}">${v.l}</button>`).join('')}</div>
   <div class="st-sl"><span class="lbl">Main light</span><input type="range" min="0" max="6" step="0.05" value="${L.key}" data-inp="stL" data-arg="key"></div>
@@ -2188,9 +2200,9 @@ ACT.stOslFromTab=()=>{const o=stS().light.osl;o.hex=state.light.hex;o.inten=Math
 ACT.stBg=k=>{stS().bg=k;save();applyLights();stPanel()};
 ACT.stModel=k=>{const S=stS();if(S.model===k&&ST.D)return;S.model=k;S.active=0;save();stPanel();loadModel(k)};
 CHG.stFile=async(a,t)=>{const f=t.files[0];t.value='';if(!f)return;const ext=/\.obj$/i.test(f.name)?'obj':'stl';if(f.size>250e6){toast('That file is very large (over 250 MB)');return}
- const buf=await f.arrayBuffer();await IDB.set('upload',{buf,name:f.name,ext,rot:ext==='stl'?[-90,0,0]:[0,0,0]});await IDB.del('paint:upload');const S=stS();S.slots.upload=null;stSlots('upload');S.model='upload';S.active=0;save();ST.key=null;await loadModel('upload');stPanel()};
+ const buf=await f.arrayBuffer();await IDB.set('upload',{buf,name:f.name,ext,rot:ext==='stl'?[-90,0,0]:[0,0,0]});await IDB.del('paint:upload');await IDB.del('occ:upload:v1');const S=stS();S.slots.upload=null;stSlots('upload');S.model='upload';S.active=0;save();ST.key=null;await loadModel('upload');stPanel()};
 ACT.stRot=ax=>{(async()=>{const rec=await IDB.get('upload');if(!rec)return;rec.rot=rec.rot||[0,0,0];rec.rot[+ax]=((rec.rot[+ax]||0)+90)%360;await IDB.set('upload',rec);loadModel('upload')})()};
-ACT.stDelUpload=async()=>{if(!confirm('Remove the uploaded model and its paint from this browser?'))return;await IDB.del('upload');await IDB.del('paint:upload');const S=stS();S.slots.upload=null;S.model='ranger';save();loadModel('ranger')};
+ACT.stDelUpload=async()=>{if(!confirm('Remove the uploaded model and its paint from this browser?'))return;await IDB.del('upload');await IDB.del('paint:upload');await IDB.del('occ:upload:v1');const S=stS();S.slots.upload=null;S.model='ranger';save();loadModel('ranger')};
 ACT.stClear=()=>{if(!ST.D||!confirm('Reset all paint on this model?'))return;pushUndo();ST.D.slot.set(ST.D.def);recolor();saveSlots()};
 ACT.stUndo=()=>{if(!ST.D||!ST.undo.length)return;ST.redo.push(ST.D.slot.slice());ST.D.slot.set(ST.undo.pop());recolor();saveSlots()};
 ACT.stRedo=()=>{if(!ST.D||!ST.redo.length)return;ST.undo.push(ST.D.slot.slice());ST.D.slot.set(ST.redo.pop());recolor();saveSlots()};
@@ -2202,7 +2214,95 @@ document.addEventListener('keydown',e=>{if(state.ui.tab!=='studio'||/input|texta
 /* send colours here from other tabs */
 function toStudio(pid,shade,hl){const s=stSlots()[stS().active];s.pid=pid;if(shade)s.shade=shade;if(hl)s.hl=hl;s.fin=getPaint(pid)&&getPaint(pid).metal?'metal':s.fin==='metal'?'matte':s.fin;save();ST.tables=null;if(ST.D)recolor();toast('Sent to 3D Studio → “'+s.name+'”');show('studio')}
 ACT.mxTo3d=()=>{if(LASTMIX)toStudio('hex:'+LASTMIX.hex)};
-ACT.ly3d=()=>{const sim=simulateStack(getPaint(state.layers.base)||getPaint('hex:#86898C'),state.layers.stack);toStudio('hex:'+sim.zones[1].hex,'hex:'+sim.zones[0].hex,'hex:'+sim.zones[2].hex)};
+ACT.ly3d=()=>{if(stSlots().length){ACT.stImpLy();show('studio');return}const sim=simulateStack(getPaint(state.layers.base)||getPaint('hex:#86898C'),state.layers.stack);toStudio('hex:'+sim.zones[1].hex,'hex:'+sim.zones[0].hex,'hex:'+sim.zones[2].hex)};
+
+/* ====================================================================== PAINT FILMS ON THE 3D MODEL
+   Each colour slot carries a stack of paint layers. Per vertex, each layer gets a film thickness from
+   where paint physically goes (recess depth, occlusion, edges, surface direction, gravity) and is
+   composited with Kubelka's layering formula: R = R0 + T²·Rg / (1 − R0·Rg). */
+/* Transparent hobby paints are catalogued as they look brushed over white; recover the concentrated
+   colour that reproduces that swatch as one coat over white primer. */
+const FILM_RG=0.85,FILM_SX_WASH=0.045,FILM_SX_CONTRAST=0.16;
+function filmCh(g,a,b,sx){const x=Math.min(b*sx,18);if(x<1e-5)return g;const e=Math.exp(x),ie=1/e,sh=(e-ie)/2,ch=(e+ie)/2,d=a*sh+b*ch;const R0=sh/d,T=b/d;return R0+T*T*g/(1-R0*g)}
+const kmAB=R=>{R=Math.min(0.998,Math.max(0.0015,R));const k=(1-R)*(1-R)/(2*R);return [1+k,Math.sqrt(k*k+2*k)]};
+function filmSrc(p){if(!p||!p.trans||p.metal)return p;if(p._film)return p._film;const FILM_SX=/contrast|speed|xpress|instant|one.?coat/i.test((p.line||'')+' '+p.name)?FILM_SX_CONTRAST:FILM_SX_WASH;
+ const lin=p.lin.map(t=>{let lo=0.0015,hi=0.998;for(let it=0;it<40;it++){const m=(lo+hi)/2;const [a,b]=kmAB(m);if(filmCh(FILM_RG,a,b,FILM_SX)<t)lo=m;else hi=m}return (lo+hi)/2});
+ const c=makeColor(linToHex(lin),{name:p.name,opk:'T',str:p.str,trans:true});p._film=c;return c}
+const LT={layer:{l:'Layer / basecoat',k:1,water:1,tip:'An even coat over the whole area. More coats or less thinning = more coverage.'},
+ wash:{l:'Wash / shade',k:1,water:0,tip:'Flows into recesses and leaves a light tint on flat areas. Dark tide-marks form where it dries.'},
+ oil:{l:'Oil / enamel wash',k:1,water:8,tip:'Flood the whole area, let it settle, then wipe the raised surfaces with thinner.'},
+ pin:{l:'Pin wash (lines only)',k:1.2,water:3,tip:'Touched into panel lines and recesses only; capillary action pulls it along the lines.'},
+ contrast:{l:'Contrast / speedpaint',k:1,water:0,tip:'One coat over a light undercoat: pools dark in recesses and thins out on raised areas.'},
+ glaze:{l:'Glaze',k:0.35,water:3,tip:'A very thin transparent pass that shifts the hue without hiding what is below.'},
+ dry:{l:'Drybrush',k:0.32,water:0,tip:'Catches raised texture and edges, strongest on upward-facing surfaces.'},
+ edge:{l:'Edge highlight',k:1.6,water:0.5,tip:'A fine line on sharp edges only.'},
+ streak:{l:'Streaking grime / rust',k:0.8,water:4,tip:'Runs down vertical surfaces under gravity and gathers under ledges.'}};
+function defLayer(type,pid,o){const t=LT[type]||LT.layer;return Object.assign({id:uid(),type,pid,amt:1,water:t.water,wipe:0.6,tide:0.35},o||{})}
+function defaultLayers(key,i){const C=(n,l,fb)=>findPid('cit',n,l,fb),L=defLayer;
+ const D={ranger:[[L('wash',C('Nuln Oil','Shade','#2A2A2A')),L('edge',C('Calgar Blue','Layer','#2A497F'))],[L('wash',C('Reikland Fleshshade','Shade','#6B3B26')),L('edge',C('Liberator Gold','Layer','#E1BA7F'))],[L('wash',C('Carroburg Crimson','Shade','#5A1530')),L('edge',C('Wild Rider Red','Layer','#E82E1B'),{amt:0.6})],[L('wash',C('Nuln Oil','Shade','#2A2A2A')),L('dry',C('Dawnstone','Layer','#697068'),{amt:0.7})],[L('wash',C('Agrax Earthshade','Shade','#3B2A1A')),L('edge',C('Skrag Brown','Layer','#8B4806'),{amt:0.3})],[L('wash',C('Nuln Oil','Shade','#2A2A2A')),L('edge',C('Runefang Steel','Layer','#C2C8CC'))],[],[L('wash',C('Agrax Earthshade','Shade','#3B2A1A')),L('dry',C('Terminatus Stone','Dry','#C8B79D'))],[],[L('edge',C('Dawnstone','Layer','#697068'),{amt:0.8})]],
+  shapes:[[L('wash',C('Carroburg Crimson','Shade','#5A1530'))],[L('oil','pig:pbr7-bu',{wipe:0.65})],[L('streak','pig:pr101-tro')],[L('contrast',C('Ultramarines Blue','Contrast','#091948'))],[L('dry',C('Terminatus Stone','Dry','#C8B79D'))],[]],
+  pad:[[L('wash',C('Carroburg Crimson','Shade','#5A1530')),L('edge',C('Wild Rider Red','Layer','#E82E1B'),{amt:0.7})],[L('wash',C('Reikland Fleshshade','Shade','#6B3B26'))],[L('pin',C('Nuln Oil','Shade','#2A2A2A'))],[L('wash',C('Seraphim Sepia','Shade','#5A3A1A'))],[L('edge',C('Dawnstone','Layer','#697068'))]]};
+ return ((D[key]||[])[i]||[]).map(x=>({...x,id:uid()}))}
+/* per-vertex noise for brush texture and vertical streaks */
+function hash3(x,y,z){let h=(Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(z,1274126177))|0;h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967295}
+function vnoise(x,y,z){const xi=Math.floor(x),yi=Math.floor(y),zi=Math.floor(z),xf=x-xi,yf=y-yi,zf=z-zi;const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),w=zf*zf*(3-2*zf);const L=(a,b,t)=>a+(b-a)*t;
+ return L(L(L(hash3(xi,yi,zi),hash3(xi+1,yi,zi),u),L(hash3(xi,yi+1,zi),hash3(xi+1,yi+1,zi),u),v),L(L(hash3(xi,yi,zi+1),hash3(xi+1,yi,zi+1),u),L(hash3(xi,yi+1,zi+1),hash3(xi+1,yi+1,zi+1),u),v),w)}
+const fbm=(x,y,z)=>0.62*vnoise(x,y,z)+0.38*vnoise(x*2.3+17,y*2.3+5,z*2.3+11);
+function settleFields(D){const n=D.nv,P=D.pos,s=D.size;const nt=new Float32Array(n),ns=new Float32Array(n);const F1=38/s,F2=30/s;
+ for(let i=0;i<n;i++){const x=P[3*i],y=P[3*i+1],z=P[3*i+2];nt[i]=fbm(x*F1,y*F1,z*F1);ns[i]=fbm(x*F2,y*F2*0.06,z*F2)}D.nt=nt;D.ns=ns;if(!D.occ)D.occ=new Float32Array(n)}
+/* how sheltered each point is (ray-traced occlusion) — where washes collect between parts */
+async function bakeOcc(D,key){const T=ST.T;const cached=await IDB.get('occ:'+key);if(cached&&cached.occ&&cached.occ.length===D.nv){D.occ=cached.occ;D.occDone=true;return}
+ const n=D.nv,P=D.pos,N=D.nrm,stride=Math.max(1,Math.ceil(n/30000)),R=8;const rc=new T.Raycaster();rc.firstHitOnly=true;rc.far=D.size*0.075;rc.near=0;
+ const o=new T.Vector3(),d=new T.Vector3(),occ=new Float32Array(n).fill(-1),dirs=[];for(let k=0;k<R;k++){const u=(k+0.5)/R,ph=k*2.39996,r=Math.sqrt(u);dirs.push([r*Math.cos(ph),r*Math.sin(ph),Math.sqrt(1-u)])}
+ let t0=performance.now();const eps=D.size*0.004;
+ for(let i=0;i<n;i+=stride){if(ST.D!==D)return;const nx=N[3*i],ny=N[3*i+1],nz=N[3*i+2];let ax=Math.abs(nx)<0.9?1:0,ay=ax?0:1;let tx=ny*0-nz*ay,ty=nz*ax-nx*0,tz=nx*ay-ny*ax;const tl=Math.hypot(tx,ty,tz)||1;tx/=tl;ty/=tl;tz/=tl;const bx=ny*tz-nz*ty,by=nz*tx-nx*tz,bz=nx*ty-ny*tx;
+  o.set(P[3*i]+nx*eps,P[3*i+1]+ny*eps,P[3*i+2]+nz*eps);let hit=0;for(const [a,b,c] of dirs){d.set(tx*a+bx*b+nx*c,ty*a+by*b+ny*c,tz*a+bz*b+nz*c);rc.set(o,d);if(rc.intersectObject(ST.mesh,false).length)hit++}occ[i]=hit/R;
+  if(performance.now()-t0>28){stStatus('Analysing where paint will settle… '+Math.round(i/n*100)+'%',true);await nextFrame();t0=performance.now()}}
+ for(let pass=0;pass<14;pass++){let left=0;for(let i=0;i<n;i++){if(occ[i]>=0)continue;let s=0,c=0;for(let k=D.st[i];k<D.st[i+1];k++){const v=occ[D.adj[k]];if(v>=0){s+=v;c++}}if(c)occ[i]=s/c;else left++}if(!left)break}
+ for(let i=0;i<n;i++)if(occ[i]<0)occ[i]=0;
+ for(let it=0;it<2;it++){const o2=new Float32Array(n);for(let i=0;i<n;i++){let s=0;const c=D.st[i+1]-D.st[i];for(let k=D.st[i];k<D.st[i+1];k++)s+=occ[D.adj[k]];o2[i]=c?0.5*occ[i]+0.5*s/c:occ[i]}occ.set(o2)}
+ for(let i=0;i<n;i++)occ[i]=sstep(0.12,0.75,occ[i]);
+ if(ST.D!==D)return;D.occ=occ;D.occDone=true;IDB.set('occ:'+key,{occ});recolor();stStatus()}
+function layerTables(s){return (s.layers||[]).map(L=>{const p0=getPaint(L.pid)||getPaint('hex:#333333');const p=filmSrc(p0);const ab=p.lin.map(kmAB);const t=LT[L.type]||LT.layer;const frac=1/(1+Math.max(0,+L.water||0));
+ const opk=p0.trans?'T':(p0.opk||'SO');return {type:L.type,a:ab.map(x=>x[0]),b:ab.map(x=>x[1]),c:(HIDE[opk]||1.4)*t.k*frac*(+L.amt||0),metal:!!p0.metal,wipe:+L.wipe||0,tide:+L.tide||0}})}
+function layerW(L,f,s){const pool=Math.min(1.4,0.55*f.occ+0.85*f.cB+0.5*f.cL)*(0.6+0.4*(f.ny*0.5+0.5));
+ switch(L.type){
+  case 'wash':{const st=0.12+2.4*pool-0.1*f.vx+L.tide*1.6*Math.exp(-(((pool-0.42)/0.07)**2));return 1+(Math.max(0.02,st)-1)*s}
+  case 'oil':{const keep=Math.pow(Math.max(0,1-L.wipe),2.5)*Math.max(0,1-0.85*f.vx);return 1+((2.8*pool+keep*0.35+0.01)-1)*s}
+  case 'pin':return (3.2*sstep(0.15,0.6,f.cL)+1.4*sstep(0.2,0.8,f.cB)+1.2*sstep(0.35,0.8,f.occ))*(0.55+0.45*s);
+  case 'contrast':return 1+(Math.max(0.15,0.55+1.7*pool-0.5*f.vx)-1)*s;
+  case 'glaze':return 1+0.3*pool*s;
+  case 'dry':return sstep(0.2,0.8,f.vx+0.5*(f.nt-0.5))*(0.45+0.55*Math.max(0,f.ny));
+  case 'edge':return sstep(0.32,0.85,f.vx);
+  case 'streak':return (Math.pow(1-Math.abs(f.ny),1.2)*sstep(0.52,0.8,f.ns)*(0.6+f.occ)*1.6+f.occ*0.35)*s;
+  default:return 1}}
+/* ---------- layer stack UI (inside the active colour's panel) ---------- */
+function layersHtml(s){const Ls=s.layers||[];
+ return `<div class="lbl" style="margin-top:8px">Paint layers <span style="text-transform:none;letter-spacing:0;font-weight:500">— applied over the base colour, in order</span></div>
+ ${Ls.map((L,j)=>{const p=getPaint(L.pid);const t=LT[L.type]||LT.layer;return `<div class="st-layer">
+  <div class="row" style="flex-wrap:nowrap;gap:6px"><b class="mono" style="color:var(--dim);width:14px">${j+1}</b><select data-chg="stLType" data-arg="${j}" style="flex:1;min-width:0;font-size:12px;padding:5px">${Object.entries(LT).map(([k,v])=>`<option value="${k}" ${L.type===k?'selected':''}>${v.l}</option>`).join('')}</select>
+   <button class="btn icon sm ghost" data-act="stLMv" data-arg="${j}:-1" aria-label="Move up">↑</button><button class="btn icon sm ghost" data-act="stLMv" data-arg="${j}:1" aria-label="Move down">↓</button><button class="btn icon sm ghost danger" data-act="stLDel" data-arg="${j}" aria-label="Remove layer">✕</button></div>
+  <button class="st-lpaint" data-act="stLPaint" data-arg="${j}">${sw(p?p.hex:'#333','s20')}<span style="flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p?esc(p.name):'Choose paint'}${p&&p.brandId&&!/^(hex|saved)$/.test(p.brandId)?` <span class="hint">${esc(p.brand.split(' (')[0])}${p.line&&p.brandId!=='pig'?' · '+esc(p.line):''}</span>`:''}</span><span class="hint">change</span></button>
+  <div class="st-sl"><span class="lbl">${/dry|edge/.test(L.type)?'Strength':'Amount / coats'} <b class="mono" style="color:var(--gold2)">${fmt(L.amt,1)}×</b></span><input type="range" min="0.1" max="3" step="0.05" value="${L.amt}" data-inp="stLv" data-arg="${j}|amt"></div>
+  <div class="st-sl"><span class="lbl">Thinning · paint : ${L.type==='oil'||L.type==='streak'?'thinner':'water'} <b class="mono" style="color:var(--gold2)">1:${fmt(L.water,L.water%1?1:0)}</b></span><input type="range" min="0" max="10" step="0.5" value="${L.water}" data-inp="stLv" data-arg="${j}|water"></div>
+  ${L.type==='oil'?`<div class="st-sl"><span class="lbl">Wipe-off from raised areas <b class="mono" style="color:var(--gold2)">${Math.round(L.wipe*100)}%</b></span><input type="range" min="0" max="1" step="0.02" value="${L.wipe}" data-inp="stLv" data-arg="${j}|wipe"></div>`:''}
+  ${L.type==='wash'?`<div class="st-sl"><span class="lbl">Tide marks <b class="mono" style="color:var(--gold2)">${Math.round(L.tide*100)}%</b></span><input type="range" min="0" max="1" step="0.02" value="${L.tide}" data-inp="stLv" data-arg="${j}|tide"></div>`:''}
+  <p class="hint" style="font-size:11px;margin:2px 0 0">${t.tip}</p></div>`}).join('')||'<p class="hint" style="font-size:12px;margin:4px 0">No layers yet. Add a wash to watch it settle into the recesses.</p>'}
+ <div class="row" style="gap:6px"><select data-chg="stLAdd" style="flex:1;min-width:0;font-size:12px"><option value="">+ Add a paint layer…</option>${Object.entries(LT).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}</select><button class="btn sm ghost" data-act="stImpLy" title="Use the primer and stack from the Layers tab">From Layers tab</button></div>`}
+const curSlot=()=>stSlots()[stS().active];
+const layersChanged=(full)=>{save();ST.tables=null;if(full!==false)stPanel();stRecolorSoon()};
+CHG.stLAdd=(a,t)=>{const type=t.value;t.value='';if(!type)return;const s=curSlot();s.layers=s.layers||[];
+ const def={wash:findPid('cit','Nuln Oil','Shade','#2A2A2A'),oil:'pig:pbr7-bu',pin:findPid('cit','Nuln Oil','Shade','#2A2A2A'),contrast:findPid('cit','Basilicanum Grey','Contrast','#212121'),glaze:'pig:py150',dry:findPid('cit','Terminatus Stone','Dry','#C8B79D'),edge:'pig:pw6',streak:'pig:pr101-tro',layer:s.pid}[type];
+ s.layers.push(defLayer(type,def));layersChanged();openPicker(p=>{if(p){s.layers[s.layers.length-1].pid=p.id;layersChanged()}},LT[type].l+' — choose paint')};
+CHG.stLType=(j,t)=>{const L=curSlot().layers[+j];L.type=t.value;if(LT[t.value])L.water=LT[t.value].water;layersChanged()};
+ACT.stLPaint=j=>openPicker(p=>{if(p){curSlot().layers[+j].pid=p.id;layersChanged()}},'Layer paint');
+ACT.stLDel=j=>{curSlot().layers.splice(+j,1);layersChanged()};
+ACT.stLMv=a=>{const [j,d]=a.split(':').map(Number);const Ls=curSlot().layers,k=j+d;if(k<0||k>=Ls.length)return;[Ls[j],Ls[k]]=[Ls[k],Ls[j]];layersChanged()};
+INP.stLv=(a,t)=>{const [j,f]=a.split('|');const L=curSlot().layers[+j];L[f]=+t.value;const b=t.parentNode.querySelector('b');if(b)b.textContent=f==='amt'?fmt(L.amt,1)+'×':f==='water'?'1:'+(L.water%1?L.water.toFixed(1):L.water):Math.round(L[f]*100)+'%';layersChanged(false)};
+ACT.stImpLy=()=>{const s=curSlot();const map={coat:'layer',glaze:'glaze',wash:'wash',contrast:'contrast',dry:'dry',edge:'edge'};s.pid=state.layers.base;
+ s.layers=state.layers.stack.filter(l=>getPaint(l.id)).map(l=>defLayer(map[l.meth]||'layer',l.id,{amt:l.coats||1,water:l.water}));s.fin=getPaint(s.pid)&&getPaint(s.pid).metal?'metal':'matte';layersChanged();toast('Imported '+s.layers.length+' layers from the Layers tab')};
+INP.stSettle=(a,t)=>{stS().settle=+t.value;const b=$('#stSv');if(b)b.textContent=Math.round(t.value*100)+'%';save();stRecolorSoon()};
+let stPlayRaf=0;ACT.stPlay=()=>{cancelAnimationFrame(stPlayRaf);const S=stS(),t0=performance.now(),dur=2600;const step=()=>{const k=Math.min(1,(performance.now()-t0)/dur);S.settle=1-Math.pow(1-k,2.2);const r=$('#stSettleR'),b=$('#stSv');if(r)r.value=S.settle;if(b)b.textContent=Math.round(S.settle*100)+'%';recolor();if(k<1)stPlayRaf=requestAnimationFrame(step);else save()};S.settle=0;stPlayRaf=requestAnimationFrame(step)};
 
 /* ---------- export / import / about ---------- */
 ACT.exportAll=()=>{const blob=new Blob([JSON.stringify({app:'pigmentarium',v:1,data:state},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);state.lastBackup=Date.now();save();a.download='pigmentmaxxing-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Backup downloaded')};
@@ -2218,7 +2318,7 @@ ACT.about=()=>openModal(`<div class="mh"><div class="row between"><h2>How the mi
  <h3>6 · Calibration</h3><p>Photograph your own swatches with a grey card: the app white-balances the photo, replaces the library colour with your bottle's, and fits tinting strength from a 1:1 tint.</p>
  <h3>7 · Lighting &amp; OSL</h3><p>Colour under a light is the paint's reflectance multiplied by the light's spectrum, seen through the CIE observer. OSL adds a coloured light on top of dim ambient light; scene lighting (LEDs, tungsten, fluorescent, tri-phosphor convention-hall tubes) adapts the eye to each light, which exposes metamerism — paints that match in daylight but not under spiky light.</p>
  <h3>Data</h3><p>Paint colours for ~9,700 paints across 32 brands come from the open Miniature Painter Pro dataset (MIT licence, github.com/Arcturus5404/miniature-paints). Pigment codes marked <span class="badge b-pub">PUB</span> are published by the maker (Golden, Liquitex, Kimera); <span class="badge b-est">EST</span> codes for popular Citadel, Vallejo and Army Painter paints are my estimates; most hobby paints have no published pigments, so they mix at neutral strength. Strong single-pigment artist paints (phthalos, dioxazine…) mix using their tint behaviour, since their tube colour is a near-black masstone.</p>
- <h3>8 · 3D Studio</h3><p>Models are painted per vertex with colour slots. Recess shading and edge highlights come from the mesh's curvature, and their colours are Kubelka–Munk mixes of each base colour. Ambient occlusion (GTAO) darkens gaps between parts. Rendering uses Three.js (MIT licence) and three-mesh-bvh (MIT licence) loaded from the jsDelivr CDN. Uploaded STL/OBJ files never leave your device — they're stored in this browser only.</p>
+ <h3>8 · 3D Studio</h3><p>Models are painted per vertex with colour slots. Each colour can carry a stack of paint layers (washes, oil washes, pin washes, contrast, glazes, drybrush, edge highlights, streaking). Every layer gets a film thickness per point from where liquid paint goes — recess depth, ray-traced occlusion, edges, which way the surface faces and gravity — and is composited with Kubelka's layering formula over the colour beneath. Transparent hobby paints are catalogued as they look over white, so their concentrated colour is recovered first. Recess shading and edge highlights come from the mesh's curvature, and their colours are Kubelka–Munk mixes of each base colour. Ambient occlusion (GTAO) darkens gaps between parts. Rendering uses Three.js (MIT licence) and three-mesh-bvh (MIT licence) loaded from the jsDelivr CDN. Uploaded STL/OBJ files never leave your device — they're stored in this browser only.</p>
  <h3>Not affiliated</h3><p>Pigmentmaxxing is an independent fan-made tool. It is not affiliated with, sponsored or endorsed by any paint manufacturer or game publisher. Product and brand names are trademarks of their respective owners and are used only to identify which paints a colour matches. All colours are on-screen approximations.</p>
  <h3>Credits &amp; licences</h3><p>Paint colour data: Miniature Painter Pro open dataset (github.com/Arcturus5404/miniature-paints), used under the MIT License:</p><pre style="white-space:pre-wrap;font:11px/1.45 'JetBrains Mono',ui-monospace,monospace;background:#0f1216;border:1px solid var(--line);border-radius:9px;padding:10px;color:#b7bcc4;max-height:220px;overflow:auto">MIT License
 
